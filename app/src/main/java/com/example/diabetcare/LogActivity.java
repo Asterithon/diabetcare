@@ -1,6 +1,7 @@
 package com.example.diabetcare;
 
 import android.os.Bundle;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -40,6 +41,12 @@ public class LogActivity extends AppCompatActivity {
             return insets;
         });
 
+        ImageButton btnBack = findViewById(R.id.btnBack);
+        btnBack.setOnClickListener(v -> {
+            finish(); // 👉 menutup activity ini dan kembali ke activity sebelumnya
+        });
+
+
         DbHelper dbHelper = new DbHelper(this);
 
         TextView compliance7Days = findViewById(R.id.compliance7Days);
@@ -53,7 +60,7 @@ public class LogActivity extends AppCompatActivity {
 
         int totalAlarms = dbHelper.getAllAlarms().size();
         if (totalAlarms == 0) {
-            Toast.makeText(this, "Tidak ada alarm, chart kosong", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Saat ini belum ada alarm yang dibuat", Toast.LENGTH_SHORT).show();
         }
 
         for (int i = 1; i < 8; i++) {

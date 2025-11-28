@@ -7,13 +7,12 @@ import android.app.PendingIntent;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
+import android.widget.ImageButton;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -59,6 +58,11 @@ public class ScheduleActivity extends AppCompatActivity {
             return insets;
         });
 
+        ImageButton btnBack = findViewById(R.id.btnBack);
+        btnBack.setOnClickListener(v -> {
+            finish();
+        });
+
         dbHelper = new DbHelper(this);
 
         FloatingActionButton fabAdd = findViewById(R.id.fab_add);
@@ -81,11 +85,6 @@ public class ScheduleActivity extends AppCompatActivity {
 
             @Override
             public void onDelete(AlarmModel alarm) {
-                if (alarmList.size() <= 1) {
-                    Toast.makeText(ScheduleActivity.this, "Minimal 1 jadwal harus ada", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
                 dbHelper.deleteAlarm(alarm.id);
                 cancelAlarm(alarm.id);
                 loadAlarms();
@@ -104,36 +103,25 @@ public class ScheduleActivity extends AppCompatActivity {
         return false;
     }
 
-    private void showEditDialog(AlarmModel alarm) {
-        TimePickerDialog timePicker = new TimePickerDialog(
-                this,
-                (view, selectedHour, selectedMinute) -> {
-                    showKeteranganDialog(selectedHour, selectedMinute, alarm);
-                },
-                alarm.hour,
-                alarm.minute,
-                true
-        );
-        timePicker.show();
-    }
-
-    private int generateNewId() {
-        int maxId = 0;
-        for (AlarmModel alarm : alarmList) {
-            if (alarm.id > maxId) maxId = alarm.id;
-        }
-        return maxId + 1;
-    }
-
-    private void showKeteranganDialog(int hour, int minute, @Nullable AlarmModel toEdit) {
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_input, null);
+    private void showEditDialog(@Nullable AlarmModel toEdit) {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_timepicker, null);
+        TimePicker timePicker = dialogView.findViewById(R.id.timePicker);
         EditText input = dialogView.findViewById(R.id.input_edit_text);
+
+        if (toEdit != null) {
+            timePicker.setHour(toEdit.hour);
+            timePicker.setMinute(toEdit.minute);
+            input.setText(toEdit.keterangan);
+        }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this)
                 .setTitle(toEdit == null ? "Tambah Jadwal" : "Edit Jadwal")
                 .setView(dialogView)
                 .setPositiveButton("Simpan", (dialog, which) -> {
+                    int hour = timePicker.getHour();
+                    int minute = timePicker.getMinute();
                     String keterangan = input.getText().toString().trim();
+
                     if (keterangan.isEmpty()) {
                         Toast.makeText(this, "Keterangan tidak boleh kosong", Toast.LENGTH_SHORT).show();
                         return;
@@ -150,7 +138,6 @@ public class ScheduleActivity extends AppCompatActivity {
                         dbHelper.insertAlarm(newAlarm);
                         setTimer(hour, minute, newId, keterangan);
                         dbHelper.createDailyRiwayat();
-
                     } else {
                         AlarmModel updated = new AlarmModel(toEdit.id, hour, minute, keterangan);
                         dbHelper.updateAlarm(updated);
@@ -172,24 +159,58 @@ public class ScheduleActivity extends AppCompatActivity {
                 .setTextColor(ContextCompat.getColor(this, R.color.primary));
     }
 
+    private int generateNewId() {
+        int maxId = 0;
+        for (AlarmModel alarm : alarmList) {
+            if (alarm.id > maxId) maxId = alarm.id;
+        }
+        return maxId + 1;
+    }
 
 
     private void showAddDialog() {
-        Calendar now = Calendar.getInstance();
-        int hour = now.get(Calendar.HOUR_OF_DAY);
-        int minute = now.get(Calendar.MINUTE);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_timepicker, null);
+        TimePicker timePicker = dialogView.findViewById(R.id.timePicker);
+        EditText input = dialogView.findViewById(R.id.input_edit_text);
 
-        TimePickerDialog timePicker = new TimePickerDialog(
-                this,
-                AlertDialog.THEME_HOLO_LIGHT,
-                (view, selectedHour, selectedMinute) -> {
-                    showKeteranganDialog(selectedHour, selectedMinute, null); // null artinya tambah baru
-                },
-                hour,
-                minute,
-                true
-        );
-        timePicker.show();
+        timePicker.setIs24HourView(true);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this)
+                .setTitle("Tambah Jadwal")
+                .setView(dialogView)
+                .setPositiveButton("Simpan", (dialog, which) -> {
+                    int hour = timePicker.getHour();
+                    int minute = timePicker.getMinute();
+                    String keterangan = input.getText().toString().trim();
+
+                    if (keterangan.isEmpty()) {
+                        Toast.makeText(this, "Keterangan tidak boleh kosong", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    if (isDuplicateTime(hour, minute, null)) {
+                        Toast.makeText(this, "Jadwal dengan jam yang sama sudah ada", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    int newId = generateNewId();
+                    AlarmModel newAlarm = new AlarmModel(newId, hour, minute, keterangan);
+                    dbHelper.insertAlarm(newAlarm);
+                    setTimer(hour, minute, newId, keterangan);
+                    dbHelper.createDailyRiwayat();
+
+                    loadAlarms();
+                })
+                .setNegativeButton("Batal", null);
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        dialog.getWindow().setBackgroundDrawableResource(R.drawable.rounded_dialog);
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                .setTextColor(ContextCompat.getColor(this, R.color.primary));
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
+                .setTextColor(ContextCompat.getColor(this, R.color.primary));
     }
 
     private void loadAlarms() {
