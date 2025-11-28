@@ -46,7 +46,7 @@ public class LogActivity extends AppCompatActivity {
 
         TextView compliance7Days = findViewById(R.id.compliance7Days);
         int percent7Days = dbHelper.getComplianceLast7Days();
-        compliance7Days.setText("Kepatuhan 7 hari terakhir: " + percent7Days + "%");
+        compliance7Days.setText("7 hari terakhir: " + percent7Days + "%");
 
         // ✅ ambil data kepatuhan untuk chart
         List<BarEntry> barEntries = new ArrayList<>();
@@ -73,12 +73,11 @@ public class LogActivity extends AppCompatActivity {
         List<HistoryModel> history = dbHelper.getHistoryGroupedByDate();
         HistoryAdapter adapter = new HistoryAdapter(this, history);
         listView.setAdapter(adapter);
-
     }
 
     private void setupBarChart(List<BarEntry> barEntries) {
         BarDataSet dataSet = new BarDataSet(barEntries, "Kepatuhan Harian (%)");
-        dataSet.setColor(getResources().getColor(android.R.color.holo_blue_light));
+        dataSet.setColor(getResources().getColor(android.R.color.holo_red_dark));
         BarData data = new BarData(dataSet);
         binding.barChart.setData(data);
         binding.barChart.invalidate();

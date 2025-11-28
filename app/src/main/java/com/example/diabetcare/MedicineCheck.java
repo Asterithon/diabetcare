@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.content.ContextCompat;
 
 import java.util.Calendar;
 
@@ -60,13 +61,23 @@ public class MedicineCheck extends AppCompatActivity {
         builder.setPositiveButton("Konfirmasi", (dialog, which) -> {
             simpanRiwayat(status);
         });
-
         builder.setNegativeButton("Batal", (dialog, which) -> {
             dialog.dismiss();
         });
 
-        builder.show();
+        AlertDialog dialog = builder.show();
+
+        // Style popup
+        dialog.getWindow().setBackgroundDrawableResource(R.drawable.rounded_dialog);
+
+        // Style button popup
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(
+                ContextCompat.getColor(this, R.color.primary));
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(
+                ContextCompat.getColor(this, R.color.primary));
     }
+
+
 
     private void simpanRiwayat(String status) {
         // ambil tanggal jadwal dari intent

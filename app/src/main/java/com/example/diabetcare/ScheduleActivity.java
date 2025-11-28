@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -125,43 +126,49 @@ public class ScheduleActivity extends AppCompatActivity {
     }
 
     private void showKeteranganDialog(int hour, int minute, @Nullable AlarmModel toEdit) {
-        EditText input = new EditText(this);
-        input.setHint("Masukkan keterangan");
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_input, null);
+        EditText input = dialogView.findViewById(R.id.input_edit_text);
 
-        new AlertDialog.Builder(this)
+        AlertDialog.Builder builder = new AlertDialog.Builder(this)
                 .setTitle(toEdit == null ? "Tambah Jadwal" : "Edit Jadwal")
-                .setView(input)
+                .setView(dialogView)
                 .setPositiveButton("Simpan", (dialog, which) -> {
                     String keterangan = input.getText().toString().trim();
                     if (keterangan.isEmpty()) {
                         Toast.makeText(this, "Keterangan tidak boleh kosong", Toast.LENGTH_SHORT).show();
                         return;
                     }
-
                     if (isDuplicateTime(hour, minute, toEdit != null ? toEdit.id : null)) {
                         Toast.makeText(this, "Jadwal dengan jam yang sama sudah ada", Toast.LENGTH_SHORT).show();
                         return;
                     }
-
                     if (toEdit == null) {
                         int newId = generateNewId();
                         AlarmModel newAlarm = new AlarmModel(newId, hour, minute, keterangan);
                         dbHelper.insertAlarm(newAlarm);
                         setTimer(hour, minute, newId, keterangan);
                         dbHelper.createDailyRiwayat();
-
                     } else {
                         AlarmModel updated = new AlarmModel(toEdit.id, hour, minute, keterangan);
                         dbHelper.updateAlarm(updated);
                         setTimer(hour, minute, updated.id, keterangan);
                         dbHelper.createDailyRiwayat();
                     }
-
                     loadAlarms();
                 })
-                .setNegativeButton("Batal", null)
-                .show();
+                .setNegativeButton("Batal", null);
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        dialog.getWindow().setBackgroundDrawableResource(R.drawable.rounded_dialog);
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                .setTextColor(ContextCompat.getColor(this, R.color.primary));
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
+                .setTextColor(ContextCompat.getColor(this, R.color.primary));
     }
+
+
 
     private void showAddDialog() {
         Calendar now = Calendar.getInstance();

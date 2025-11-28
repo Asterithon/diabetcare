@@ -14,7 +14,7 @@
         android:layout_marginTop="16dp"
         android:layout_marginStart="16dp"
         android:textStyle="bold"
-        android:textSize="16sp"
+        android:textSize="20dp"
         android:textColor="#000000" />
 
     <TextView
@@ -22,7 +22,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="  - Jadwal 1 → sudah, 08:05\n  - Jadwal 2 → belum, 20:10"
-        android:textSize="14sp"
+        android:textSize="20dp"
         android:textColor="#444444"
         android:layout_marginTop="8dp" />
 </LinearLayout>

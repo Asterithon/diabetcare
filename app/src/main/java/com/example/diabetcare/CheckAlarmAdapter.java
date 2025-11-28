@@ -54,7 +54,8 @@ public class CheckAlarmAdapter extends RecyclerView.Adapter<CheckAlarmAdapter.Ch
 
         } else if (inWindow) {
             holder.btnCheck.setEnabled(true);
-            holder.btnCheck.setText("konfirmasi Obat (" + jamText + ")");
+            holder.btnCheck.setBackgroundResource(R.drawable.btn_primary);
+            holder.btnCheck.setText("Konfirmasi Obat (" + jamText + ")");
             holder.btnCheck.setOnClickListener(v -> {
                 Intent intent = new Intent(context, MedicineCheck.class);
                 intent.putExtra("alarm_id", alarm.id);

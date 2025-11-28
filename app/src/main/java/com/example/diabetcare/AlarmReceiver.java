@@ -70,7 +70,7 @@ public class AlarmReceiver extends BroadcastReceiver {
                 checkIntent.getIntExtra("jadwal_menit", -1));
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "Notify")
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setSmallIcon(R.drawable.diabetimer)
                 .setContentTitle("Waktunya minum obat")
                 .setContentText(keterangan + " - " + String.format("%02d:%02d", hour, minute))
                 .setContentIntent(pendingIntent)
