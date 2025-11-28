@@ -38,8 +38,8 @@ public class AlarmAdapter extends RecyclerView.Adapter<AlarmAdapter.AlarmViewHol
     @Override
     public void onBindViewHolder(@NonNull AlarmViewHolder holder, int position) {
         AlarmModel alarm = alarms.get(position);
-        holder.txtJadwal.setText("Jadwal " + alarm.id + " - " + String.format("%02d:%02d", alarm.hour, alarm.minute));
-        holder.txtKeterangan.setText("Keterangan: " + alarm.keterangan);
+        holder.txtJadwal.setText(String.format("%02d:%02d", alarm.hour, alarm.minute));
+        holder.txtKeterangan.setText(alarm.keterangan);
 
         holder.btnEdit.setOnClickListener(v -> listener.onEdit(alarm));
         holder.btnDelete.setOnClickListener(v -> listener.onDelete(alarm));
