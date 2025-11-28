@@ -58,7 +58,7 @@ public class ScheduleActivity extends AppCompatActivity {
             return insets;
         });
 
-        dbHelper = new DbHelper(this); // ✅ inisialisasi field, bukan variabel lokal
+        dbHelper = new DbHelper(this);
 
         FloatingActionButton fabAdd = findViewById(R.id.fab_add);
         fabAdd.setOnClickListener(v -> {
@@ -148,10 +148,13 @@ public class ScheduleActivity extends AppCompatActivity {
                         AlarmModel newAlarm = new AlarmModel(newId, hour, minute, keterangan);
                         dbHelper.insertAlarm(newAlarm);
                         setTimer(hour, minute, newId, keterangan);
+                        dbHelper.createDailyRiwayat();
+
                     } else {
                         AlarmModel updated = new AlarmModel(toEdit.id, hour, minute, keterangan);
                         dbHelper.updateAlarm(updated);
                         setTimer(hour, minute, updated.id, keterangan);
+                        dbHelper.createDailyRiwayat();
                     }
 
                     loadAlarms();

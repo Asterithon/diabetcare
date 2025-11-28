@@ -34,6 +34,7 @@ public class DbHelper extends SQLiteOpenHelper {
         String CREATE_RIWAYAT_TABLE = "CREATE TABLE riwayat (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                 "id_alarm INTEGER," +
+                "tanggal_jadwal TEXT," +
                 "tanggal TEXT," +
                 "status TEXT," +
                 "waktu_konfirmasi TEXT," +
@@ -55,24 +56,13 @@ public class DbHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public void resetToDefaultAlarms() {
-        SQLiteDatabase db = this.getWritableDatabase();
-        db.delete(TABLE_NAME, null, null);
-        insertAlarm(new AlarmModel(1, 8, 0, "Pagi hari"));
-        insertAlarm(new AlarmModel(2, 20, 0, "Malam hari"));
-        db.close();
-    }
-
-    public void insertRiwayat(int idAlarm, String tanggal, String status, String waktuKonfirmasi) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put("id_alarm", idAlarm);
-        values.put("tanggal", tanggal);
-        values.put("status", status);
-        values.put("waktu_konfirmasi", waktuKonfirmasi);
-        db.insert("riwayat", null, values);
-        db.close();
-    }
+//    public void resetToDefaultAlarms() {
+//        SQLiteDatabase db = this.getWritableDatabase();
+//        db.delete(TABLE_NAME, null, null);
+//        insertAlarm(new AlarmModel(1, 8, 0, "Pagi hari"));
+//        insertAlarm(new AlarmModel(2, 20, 0, "Malam hari"));
+//        db.close();
+//    }
 
     public void insertAlarm(AlarmModel alarm) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -100,7 +90,7 @@ public class DbHelper extends SQLiteOpenHelper {
             } while (cursor.moveToNext());
         }
         cursor.close();
-        db.close();
+        // ❌ jangan tutup db di sini
         return alarms;
     }
 
@@ -125,18 +115,18 @@ public class DbHelper extends SQLiteOpenHelper {
         String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
 
         Cursor cursor = db.rawQuery(
-                "SELECT COUNT(*) FROM riwayat WHERE id_alarm = ? AND tanggal = ?",
-                new String[]{String.valueOf(alarmId), today}
+                "SELECT COUNT(*) FROM riwayat WHERE id_alarm = ? AND tanggal_jadwal = ? AND status = ?",
+                new String[]{String.valueOf(alarmId), today, "Sudah"}
         );
 
-        boolean exists = false;
+        boolean responded = false;
         if (cursor.moveToFirst()) {
-            exists = cursor.getInt(0) > 0;
+            responded = cursor.getInt(0) > 0;
         }
 
         cursor.close();
         db.close();
-        return exists;
+        return responded;
     }
 
     public List<HistoryModel> getHistoryGroupedByDate() {
@@ -170,5 +160,173 @@ public class DbHelper extends SQLiteOpenHelper {
         db.close();
         result.addAll(map.values());
         return result;
+    }
+
+    public int getTotalAlarmsForDate(String tanggalJadwal) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(
+                "SELECT COUNT(*) FROM riwayat WHERE tanggal_jadwal = ?",
+                new String[]{tanggalJadwal}
+        );
+        int total = 0;
+        if (cursor.moveToFirst()) {
+            total = cursor.getInt(0);
+        }
+        cursor.close();
+        db.close();
+        return total;
+    }
+
+    public int getRespondedForDate(String tanggalJadwal) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(
+                "SELECT COUNT(*) FROM riwayat WHERE tanggal_jadwal = ? AND status = ?",
+                new String[]{tanggalJadwal, "Sudah"}
+        );
+        int responded = 0;
+        if (cursor.moveToFirst()) {
+            responded = cursor.getInt(0);
+        }
+        cursor.close();
+        db.close();
+        return responded;
+    }
+
+    public int getComplianceRate(String tanggalJadwal) {
+        int totalAlarms = getTotalAlarmsForDate(tanggalJadwal);
+        int responded = getRespondedForDate(tanggalJadwal);
+
+        if (totalAlarms == 0) return 0;
+        float rate = (responded * 100f) / totalAlarms;
+        return Math.round(rate); // pembulatan ke persen terdekat
+    }
+
+    public void insertOrUpdateRiwayat(int alarmId, String tanggalJadwal, long jadwalMillis, String status) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        long konfirmasiMillis = System.currentTimeMillis();
+        long startWindow = jadwalMillis - (60 * 60 * 1000); // 1 jam sebelum
+        long endWindow   = jadwalMillis + (60 * 60 * 1000); // 1 jam sesudah
+
+        String waktuKonfirmasi = new SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+                .format(new Date(konfirmasiMillis));
+        String tanggal = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                .format(new Date());
+
+        ContentValues values = new ContentValues();
+        values.put("id_alarm", alarmId);
+        values.put("tanggal_jadwal", tanggalJadwal);
+        values.put("tanggal", tanggal);
+        values.put("waktu_konfirmasi", waktuKonfirmasi);
+
+        if (konfirmasiMillis >= startWindow && konfirmasiMillis <= endWindow) {
+            values.put("status", status); // "Sudah" atau "Belum"
+        } else {
+            values.put("status", "Diluar jadwal");
+        }
+
+        // cek apakah sudah ada row
+        Cursor cursor = db.rawQuery("SELECT id FROM riwayat WHERE id_alarm=? AND tanggal_jadwal=?",
+                new String[]{String.valueOf(alarmId), tanggalJadwal});
+
+        if (cursor.moveToFirst()) {
+            // update
+            db.update("riwayat", values, "id_alarm=? AND tanggal_jadwal=?",
+                    new String[]{String.valueOf(alarmId), tanggalJadwal});
+        } else {
+            // insert baru
+            db.insert("riwayat", null, values);
+        }
+        cursor.close();
+        db.close();
+    }
+
+    public void createDailyRiwayat() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+
+        List<AlarmModel> alarms = getAllAlarms();
+        for (AlarmModel alarm : alarms) {
+            Cursor cursor = db.rawQuery(
+                    "SELECT id FROM riwayat WHERE id_alarm=? AND tanggal_jadwal=?",
+                    new String[]{String.valueOf(alarm.id), today}
+            );
+            boolean exists = cursor.moveToFirst();
+            cursor.close();
+
+            if (!exists) {
+                ContentValues values = new ContentValues();
+                values.put("id_alarm", alarm.id);
+                values.put("tanggal_jadwal", today);
+                values.put("tanggal", today);
+                values.put("status", "Belum");
+                values.put("waktu_konfirmasi", "");
+                db.insert("riwayat", null, values);
+            }
+        }
+        db.close();
+    }
+
+    public String getLastRiwayatDate() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(
+                "SELECT MAX(tanggal_jadwal) FROM riwayat", null
+        );
+        String lastDate = null;
+        if (cursor.moveToFirst()) {
+            lastDate = cursor.getString(0);
+        }
+        cursor.close();
+        db.close();
+        return lastDate;
+    }
+
+    public void createRiwayatForDate(String tanggal) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        List<AlarmModel> alarms = getAllAlarms();
+        for (AlarmModel alarm : alarms) {
+            Cursor cursor = db.rawQuery(
+                    "SELECT id FROM riwayat WHERE id_alarm=? AND tanggal_jadwal=?",
+                    new String[]{String.valueOf(alarm.id), tanggal}
+            );
+            boolean exists = cursor.moveToFirst();
+            cursor.close();
+
+            if (!exists) {
+                ContentValues values = new ContentValues();
+                values.put("id_alarm", alarm.id);
+                values.put("tanggal_jadwal", tanggal);
+                values.put("tanggal", tanggal);
+                values.put("status", "Belum");
+                values.put("waktu_konfirmasi", "");
+                db.insert("riwayat", null, values);
+            }
+        }
+        db.close();
+    }
+
+    public int getComplianceLast7Days() {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.rawQuery(
+                "SELECT COUNT(*) as total, " +
+                        "SUM(CASE WHEN status = 'Sudah' THEN 1 ELSE 0 END) as sudah " +
+                        "FROM riwayat " +
+                        "WHERE tanggal_jadwal BETWEEN date('now', '-6 days') AND date('now')",
+                null
+        );
+
+        int percent = 0;
+        if (cursor.moveToFirst()) {
+            int total = cursor.getInt(cursor.getColumnIndexOrThrow("total"));
+            int sudah = cursor.getInt(cursor.getColumnIndexOrThrow("sudah"));
+            if (total > 0) {
+                percent = (int) ((sudah * 100.0) / total);
+            }
+        }
+
+        cursor.close();
+        db.close();
+        return percent;
     }
 }
