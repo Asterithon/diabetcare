@@ -7,9 +7,13 @@ import android.app.PendingIntent;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -17,6 +21,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RequiresPermission;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -102,7 +107,6 @@ public class ScheduleActivity extends AppCompatActivity {
     private void showEditDialog(AlarmModel alarm) {
         TimePickerDialog timePicker = new TimePickerDialog(
                 this,
-                AlertDialog.THEME_HOLO_LIGHT,
                 (view, selectedHour, selectedMinute) -> {
                     showKeteranganDialog(selectedHour, selectedMinute, alarm);
                 },
@@ -122,12 +126,12 @@ public class ScheduleActivity extends AppCompatActivity {
     }
 
     private void showKeteranganDialog(int hour, int minute, @Nullable AlarmModel toEdit) {
-        EditText input = new EditText(this);
-        input.setHint("Masukkan keterangan");
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_input, null);
+        EditText input = dialogView.findViewById(R.id.input_edit_text);
 
-        new AlertDialog.Builder(this)
+        AlertDialog.Builder builder = new AlertDialog.Builder(this)
                 .setTitle(toEdit == null ? "Tambah Jadwal" : "Edit Jadwal")
-                .setView(input)
+                .setView(dialogView)
                 .setPositiveButton("Simpan", (dialog, which) -> {
                     String keterangan = input.getText().toString().trim();
                     if (keterangan.isEmpty()) {
@@ -156,9 +160,19 @@ public class ScheduleActivity extends AppCompatActivity {
 
                     loadAlarms();
                 })
-                .setNegativeButton("Batal", null)
-                .show();
+                .setNegativeButton("Batal", null);
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        dialog.getWindow().setBackgroundDrawableResource(R.drawable.rounded_dialog);
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                .setTextColor(ContextCompat.getColor(this, R.color.primary));
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
+                .setTextColor(ContextCompat.getColor(this, R.color.primary));
     }
+
+
 
     private void showAddDialog() {
         Calendar now = Calendar.getInstance();
