@@ -22,7 +22,7 @@ public class CheckAlarmAdapter extends RecyclerView.Adapter<CheckAlarmAdapter.Ch
     private DbHelper dbHelper;
 
     // konstanta window validasi (1 jam)
-    private static final long WINDOW_MILLIS = 60 * 60 * 1000;
+    private static final long WINDOW_MILLIS = 1 * 60 * 60 * 1000;
 
     public CheckAlarmAdapter(Context context, List<AlarmModel> alarms, DbHelper dbHelper) {
         this.context = context;

@@ -7,12 +7,9 @@ import android.app.PendingIntent;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -20,7 +17,6 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RequiresPermission;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -106,6 +102,7 @@ public class ScheduleActivity extends AppCompatActivity {
     private void showEditDialog(AlarmModel alarm) {
         TimePickerDialog timePicker = new TimePickerDialog(
                 this,
+                AlertDialog.THEME_HOLO_LIGHT,
                 (view, selectedHour, selectedMinute) -> {
                     showKeteranganDialog(selectedHour, selectedMinute, alarm);
                 },
@@ -170,6 +167,7 @@ public class ScheduleActivity extends AppCompatActivity {
 
         TimePickerDialog timePicker = new TimePickerDialog(
                 this,
+                AlertDialog.THEME_HOLO_LIGHT,
                 (view, selectedHour, selectedMinute) -> {
                     showKeteranganDialog(selectedHour, selectedMinute, null); // null artinya tambah baru
                 },

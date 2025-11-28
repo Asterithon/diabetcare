@@ -1,7 +1,6 @@
 package com.example.diabetcare;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,7 +18,6 @@ import com.github.mikephil.charting.data.BarEntry;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
@@ -58,7 +56,7 @@ public class LogActivity extends AppCompatActivity {
             Toast.makeText(this, "Tidak ada alarm, chart kosong", Toast.LENGTH_SHORT).show();
         }
 
-        for (int i = 0; i < 7; i++) {
+        for (int i = 1; i < 8; i++) {
             String tanggal = sdf.format(cal.getTime());
             int rate = dbHelper.getComplianceRate(tanggal);
             barEntries.add(new BarEntry(i, rate));
