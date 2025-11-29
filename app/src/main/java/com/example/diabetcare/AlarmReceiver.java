@@ -18,6 +18,10 @@ import androidx.annotation.RequiresPermission;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 public class AlarmReceiver extends BroadcastReceiver {
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     @Override
@@ -50,6 +54,8 @@ public class AlarmReceiver extends BroadcastReceiver {
         if (keterangan == null) keterangan = "Minum obat";
 
         Intent checkIntent = new Intent(context, MedicineCheck.class);
+        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+        checkIntent.putExtra("tanggal_jadwal", today);
         checkIntent.putExtra("alarm_id", alarmId);
         checkIntent.putExtra("jadwal_jam", hour);
         checkIntent.putExtra("jadwal_menit", minute);

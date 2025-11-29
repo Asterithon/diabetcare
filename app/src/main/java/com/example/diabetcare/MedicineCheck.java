@@ -1,6 +1,7 @@
 package com.example.diabetcare;
 
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -9,6 +10,7 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -35,7 +37,7 @@ public class MedicineCheck extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
         alarmId = getIntent().getIntExtra("alarm_id", -1);
         alarmDesc = getIntent().getStringExtra("keterangan");
         jadwalJam = getIntent().getIntExtra("jadwal_jam", -1);
@@ -97,6 +99,10 @@ public class MedicineCheck extends AppCompatActivity {
         dbHelper.insertOrUpdateRiwayat(alarmId, tanggalJadwal, jadwalMillis, status);
 
         Toast.makeText(this, "Riwayat disimpan", Toast.LENGTH_SHORT).show();
-        finish();
+
+// ganti finish() dengan intent ke MainActivity
+        Intent intent = new Intent(MedicineCheck.this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
     }
 }

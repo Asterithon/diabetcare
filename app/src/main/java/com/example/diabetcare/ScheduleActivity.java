@@ -108,6 +108,8 @@ public class ScheduleActivity extends AppCompatActivity {
         TimePicker timePicker = dialogView.findViewById(R.id.timePicker);
         EditText input = dialogView.findViewById(R.id.input_edit_text);
 
+        timePicker.setIs24HourView(true);
+
         if (toEdit != null) {
             timePicker.setHour(toEdit.hour);
             timePicker.setMinute(toEdit.minute);

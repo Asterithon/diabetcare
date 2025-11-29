@@ -48,7 +48,8 @@ public class LogActivity extends AppCompatActivity {
 
 
         DbHelper dbHelper = new DbHelper(this);
-
+        dbHelper.fillMissingRiwayatUntilToday();
+        dbHelper.syncRiwayatForToday(); // fungsi baru untuk sinkronisasi riwayat hari ini
         TextView compliance7Days = findViewById(R.id.compliance7Days);
         int percent7Days = dbHelper.getComplianceLast7Days();
         compliance7Days.setText("7 hari terakhir: " + percent7Days + "%");
@@ -63,7 +64,7 @@ public class LogActivity extends AppCompatActivity {
             Toast.makeText(this, "Saat ini belum ada alarm yang dibuat", Toast.LENGTH_SHORT).show();
         }
 
-        for (int i = 1; i < 8; i++) {
+        for (int i = 7; i > 0; i--) {
             String tanggal = sdf.format(cal.getTime());
             int rate = dbHelper.getComplianceRate(tanggal);
             barEntries.add(new BarEntry(i, rate));

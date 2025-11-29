@@ -6,6 +6,7 @@ import android.widget.Button;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -38,11 +39,12 @@ public class MainActivity extends AppCompatActivity {
                 v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
                 return insets;
             });
-
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
             btnSchedule = findViewById(R.id.btn_schedule);
             btnLog = findViewById(R.id.btn_log);
             recyclerCheck = findViewById(R.id.recyclerCheck);
             dbHelper = new DbHelper(this);
+
             dbHelper.createDailyRiwayat();
             btnSchedule.setOnClickListener(v -> schedule());
             btnLog.setOnClickListener(v -> medicineLog());
@@ -98,4 +100,6 @@ public class MainActivity extends AppCompatActivity {
             Intent goSchedule = new Intent(this, ScheduleActivity.class);
             startActivity(goSchedule);
         }
+
+
     }
